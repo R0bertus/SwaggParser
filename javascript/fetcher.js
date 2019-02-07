@@ -1,5 +1,5 @@
 
-function swaggerify() {
+function parse() {
     var d = {};
     a = document.getElementsByTagName("a");
     for (var k of a) {
@@ -42,10 +42,10 @@ function swaggerify() {
             }
         }
     }
-    return d;
+    console.log(JSON.stringify(d))
 }
 
-function expand() {
+function toggle() {
     a = document.getElementsByTagName("a");
     for (var k of a) {
         if (k.getAttribute("class") == "nostyle") {

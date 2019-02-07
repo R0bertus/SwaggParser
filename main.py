@@ -3,7 +3,10 @@ from swaggparser.parser import SwaggParser
 
 def main():
     sp = SwaggParser()
-    sp.parse()
+    #sp.preparse()
+    #sp.create_pojos()
+    #sp.sufparse()
+    sp.apify()
 
 
 if __name__ == '__main__':
