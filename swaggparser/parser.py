@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 
 
 class SwaggParser(object):
-    def __init__(self, swagger_version=2, project="petstore", in_folder="swagger"):
+    def __init__(self, swagger_version=2, project="sol", in_folder="swagger"):
         self.root = in_folder + '/' + project + '/'
         with open(self.root + 'config.json', 'r') as f:
             config = json.load(f)
