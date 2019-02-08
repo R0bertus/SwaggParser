@@ -110,10 +110,11 @@ class SwaggParser(object):
             try:
                 print("remove: " + outfolder + filename)
                 os.remove(outfolder + filename)
-            except FileNotFoundError:
-                print(outfolder + filename)
+            except Exception:
+                pass
 
     def apify(self, project="vindeenjob", cls="VEJ"):
+        text = ""
         header = """
         
 package be.vdab.%s.utils
@@ -136,9 +137,7 @@ public class %sAPI {
                 "HEADER_VALUE"
         );
     }"""
-
-        print(header % (project, cls, cls, project))
-
+        text += header % (project, cls, cls, project)
         for branch in self.branches:
             with open(self.root + 'json/' + branch.split('.')[0] + '.json', 'r') as f:
                 swagger_ui = json.load(f)
@@ -178,32 +177,39 @@ public class %sAPI {
                                 obj = param["type"].capitalize()
 
                             if param["type"] is "json" and param["body"].startswith('['):
-                                print(str("""
+                                text += str("""
     public ArrayList<Object> getObjects(%s) {
         return rest%s.%s("%s|).statusCode(200).extractAsList(%s.class);
     }
 """ % (", ".join(p["type"] + " " + p["value"] for p in _path),
    body, req.lower(),
-   path.replace('{',  '" + ').replace('}', ' + "') + query, obj)).replace('+ "|', '').replace('|', '"').replace('?"', '?').replace('""', ''))
+   path.replace('{',  '" + ').replace('}', ' + "') + query, obj)).replace('+ "|', '').replace('|', '"').replace('?"', '?').replace('""', '')
                             else:
-                                print(str("""
+                                text += str("""
     public Object getObject(%s) {
         return rest%s.%s("%s|).statusCode(200).extractAs(%s.class);
     }
 """ % (", ".join(p["type"] + " " + p["value"] for p in _path),
    body, req.lower(),
-   path.replace('{',  '" + ').replace('}', ' + "') + query, obj)).replace('+ "|', '').replace('|', '"').replace('?"', '?').replace('""', ''))
+   path.replace('{',  '" + ').replace('}', ' + "') + query, obj)).replace('+ "|', '').replace('|', '"').replace('?"', '?').replace('""', '')
                             break
                         else:
-                            print(str("""
+                            text += str("""
     public void voidRequest(%s) {
         return rest%s.%s("%s|).statusCode(200);
     }
 """ % (", ".join(p["type"] + " " + p["value"] for p in _path),
    body, req.lower(),
-   path.replace('{',  '" + ').replace('}', ' + "') + query)).replace('+ "|', '').replace('|', '"').replace('?"', '?').replace('""', ''))
+   path.replace('{',  '" + ').replace('}', ' + "') + query)).replace('+ "|', '').replace('|', '"').replace('?"', '?').replace('""', '')
 
-        print('}')
+        text += '}'
+        outfolder = self.output_folder + '/' + '/'.join(self.base_class.replace('.', '/').split('/')[:-1]) + '/utils/'
+
+        if not os.path.exists(outfolder):
+            os.makedirs(outfolder)
+
+        with open(outfolder + cls + '.java', 'w') as f:
+            f.write(text)
 
     def preparse(self):
         d = []
@@ -232,7 +238,7 @@ public class %sAPI {
             print(f)
             try:
                 os.remove(f)
-            except FileNotFoundError:
+            except Exception:
                 pass
 
     def sufparse(self):
@@ -248,7 +254,7 @@ public class %sAPI {
         for f in t:
             try:
                 os.remove(f)
-            except FileNotFoundError:
+            except Exception:
                 pass
 
     def create_pojos(self):

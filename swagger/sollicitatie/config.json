@@ -3,6 +3,6 @@
   "output_folder": "output_sollicitatie",
   "base_class": "be.vdab.sollicitatie.domain",
   "branches": [
-    "v1"
+    "sol-v2"
   ]
 }
