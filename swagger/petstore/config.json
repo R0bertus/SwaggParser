@@ -1,0 +1,6 @@
+{
+    "project": "Petstore-QA",
+    "base_class": "be.robertus.swaggparser",
+    "output_folder": "petstore_out",
+    "branches": ["petstore"]
+}

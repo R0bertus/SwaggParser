@@ -5,14 +5,16 @@ import json
 import uuid
 import os
 from time import sleep
+from bs4 import BeautifulSoup
 
 
 class SwaggParser(object):
-    def __init__(self, project="vej", in_folder="swagger"):
+    def __init__(self, swagger_version=2, project="petstore", in_folder="swagger"):
         self.root = in_folder + '/' + project + '/'
         with open(self.root + 'config.json', 'r') as f:
             config = json.load(f)
 
+        self.version = swagger_version
         self.project = config["project"]
         self.base_class = config["base_class"]
         self.output_folder = config["output_folder"]
@@ -23,6 +25,61 @@ class SwaggParser(object):
             os.makedirs(self.tmp_dir)
 
         for branch in self.branches:
+            d = {}
+            with open(self.root + 'html/' + branch.split('.')[0] + '.html', 'r') as f:
+                html = BeautifulSoup(f.read())
+                if self.version == 2:
+                    methods = html.find_all(class_="opblock-summary-method")
+                    paths = html.find_all(class_="opblock-summary-path")
+                    parameter_containers = html.find_all(class_="opblock-body")
+                    response_containers = html.find_all(class_="responses-table")
+                    responses = [
+                        [
+                            {
+                                "type": "json" if response.find("example") is not None and
+                                                  response.find("example").get_text().startswith("{") else "class",
+                                "body": json.dumps(response.find("example").get_text())
+                                if response.find("example") is not None and
+                                   response.find("example").get_text().startswith("{") else None
+                            }
+                            for response in container.find_all("tr", class_="response") if response.get("data-code") == "200"
+                        ] for container in response_containers
+                    ]
+                    print([parameter for parameter in parameter_containers[5].find(class_="parameters")])
+                    parameters = [
+                        [
+                            {
+                                "class": parameter.find(class_="parameter__in").get_text().
+                                    replace('(', '').replace(')', '')
+                                if parameter.find(class_="parameter__in") is not None else None,
+                                "name": parameter.find(class_="parameter__name").get_text().split('*')[0][:-1]
+                                if parameter.find(class_="parameter__name") is not None else None
+                                ,
+                                "type": container.find(class_="body-param__example").get_text()
+                                if parameter.find(class_="parameter__in") is not None and
+                                   parameter.find(class_="parameter__in").get_text().
+                                       replace('(', '').replace(')', '') == "body"
+                                else parameter.find(class_="parameter__type").get_text().split('(')[0]
+                                if parameter.find(class_="parameter__type") is not None else None
+                            } for parameter in [container.find(class_="parameters")] #FIXME
+                        ] for container in parameter_containers
+                    ]
+
+                    print(len(paths), len(methods), len(parameters), len(responses))
+                    for i, path in enumerate(paths):
+                        print(path.get_text(), methods[i].get_text())
+                        if path not in d:
+                            d[path.get_text()] = {}
+                        d[path.get_text()][methods[i].get_text()] = {
+                            "request": [
+                                parameter for parameter in parameters[i]
+                            ],
+                            "response": responses[i]
+                        }
+
+            print(json.dumps(d, indent=4, sort_keys=True))
+
+            exit(404)
             with open(self.root + 'json/' + branch.split('.')[0] + '.json', 'r') as f:
                 swagger_ui = json.load(f)
 
@@ -41,7 +98,7 @@ class SwaggParser(object):
         for filename in os.listdir(outfolder):
             try:
                 os.remove(outfolder + filename)
-            except FileNotFoundError:
+            except Exception:
                 pass
 
     def apify(self, project="vindeenjob", cls="VEJ"):

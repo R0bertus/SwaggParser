@@ -6,7 +6,7 @@ def main():
     #sp.preparse()
     #sp.create_pojos()
     #sp.sufparse()
-    sp.apify()
+    # sp.apify()
 
 
 if __name__ == '__main__':
