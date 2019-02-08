@@ -49,7 +49,8 @@ class SwaggParser(object):
                                 if response.find("pre", class_="example") is not None and
                                    response.find("pre", class_="example").get_text().startswith("{") else None
                             }
-                            for response in container.find_all("tr", class_="response") if response.get("data-code") == "200"
+                            for response in container.find_all("tr", class_="response")
+                            if response.find('td', class_="response-col_status").get_text() == "200"
                         ] for container in response_containers
                     ]
                     parameters = [

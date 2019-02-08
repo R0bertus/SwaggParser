@@ -13,7 +13,8 @@ from time import sleep
 @click.option('--in-folder', '-i', default="swagger")
 @click.option('--branch', '-b', default=None)
 @click.option('--swagger_version', '-sv', default=2)
-def swaggerify(project, cls, html_filename, url, in_folder, branch, swagger_version):
+def swaggerify(project, cls, html_filename, url, in_folder="swagger", branch=None, swagger_version=2):
+
     time_interval = 3
     driver = WebDriver("lib/chromedriver.exe")
     driver.get(url)
